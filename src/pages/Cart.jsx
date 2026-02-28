@@ -44,6 +44,7 @@ export default function Cart({ cart, onUpdate, onCheckout }) {
           bottom: 0,
           left: 0,
           right: 0,
+          zindex: 999,
           padding: "12px 16px",
           background: "var(--tg-theme-bg-color)",
           borderTop: "1px solid var(--tg-theme-secondary-bg-color)",
