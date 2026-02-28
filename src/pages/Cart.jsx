@@ -11,7 +11,7 @@ export default function Cart({ cart, onUpdate, onCheckout }) {
   }
 
   return (
-    <div style={{ paddingBottom: 90 }}>
+    <div style={{ paddingBottom: 130 }}>
       <div style={{ padding: 12 }}>
         {cart.map((item) => (
           <div
@@ -41,7 +41,7 @@ export default function Cart({ cart, onUpdate, onCheckout }) {
       <div
         style={{
           position: "fixed",
-          bottom: 0,
+          bottom: 50,
           left: 0,
           right: 0,
           zindex: 999,
