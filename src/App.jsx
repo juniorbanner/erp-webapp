@@ -89,7 +89,7 @@ export default function App() {
       {page === "catalog" && <Catalog apiClient={apiClient} onAddToCart={addToCart} />}
       {page === "cart" && <Cart cart={cart} onUpdate={updateCart} onCheckout={() => setPage("checkout")} />}
       {page === "checkout" && (
-        <Checkout cart={cart} apiClient={apiClient} tg={tg} onSuccess={handleOrderSuccess} />
+        <Checkout cart={cart} initData={initData} tg={tg} onSuccess={handleOrderSuccess} />
       )}
 
       {/* Bottom navigation */}

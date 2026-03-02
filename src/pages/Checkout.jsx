@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { createApiClient } from "../api/client";
 
-export default function Checkout({ cart, apiClient, tg, onSuccess }) {
+export default function Checkout({ cart, initData, tg, onSuccess }) {
   const [paymentType, setPaymentType] = useState("cash");
   const [deliveryType, setDeliveryType] = useState("pickup");
   const [address, setAddress] = useState("");
@@ -11,9 +12,15 @@ export default function Checkout({ cart, apiClient, tg, onSuccess }) {
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const handleSubmit = async () => {
+    if (!initData) {
+      setError("Откройте магазин через Telegram бота");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      // Create fresh apiClient right before submitting
+      const apiClient = createApiClient(initData);
       const res = await apiClient.post("/orders/", {
         items: cart.map((i) => ({ product_id: i.id, quantity: i.qty })),
         payment_type: paymentType,
@@ -35,58 +42,32 @@ export default function Checkout({ cart, apiClient, tg, onSuccess }) {
     <div style={{ padding: 16, paddingBottom: 90 }}>
       <h3 style={{ marginTop: 0 }}>🛒 Оформление заказа</h3>
 
-      {/* Payment */}
       <Section title="Оплата">
         {[
           { value: "cash", label: "💵 Наличные" },
           { value: "nasiya", label: "📒 Nasiya (в долг)" },
           { value: "card", label: "💳 Карта" },
         ].map((opt) => (
-          <RadioOption
-            key={opt.value}
-            value={opt.value}
-            label={opt.label}
-            selected={paymentType}
-            onSelect={setPaymentType}
-          />
+          <RadioOption key={opt.value} value={opt.value} label={opt.label} selected={paymentType} onSelect={setPaymentType} />
         ))}
       </Section>
 
-      {/* Delivery */}
       <Section title="Доставка">
         {[
           { value: "pickup", label: "🏪 Самовывоз" },
           { value: "delivery", label: "🚚 Доставка" },
         ].map((opt) => (
-          <RadioOption
-            key={opt.value}
-            value={opt.value}
-            label={opt.label}
-            selected={deliveryType}
-            onSelect={setDeliveryType}
-          />
+          <RadioOption key={opt.value} value={opt.value} label={opt.label} selected={deliveryType} onSelect={setDeliveryType} />
         ))}
         {deliveryType === "delivery" && (
-          <input
-            placeholder="Введите адрес доставки..."
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            style={inputStyle}
-          />
+          <input placeholder="Введите адрес доставки..." value={address} onChange={(e) => setAddress(e.target.value)} style={inputStyle} />
         )}
       </Section>
 
-      {/* Note */}
       <Section title="Комментарий (необязательно)">
-        <input
-          placeholder="Например: позвоните за 30 минут"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          style={inputStyle}
-        />
+        <input placeholder="Например: позвоните за 30 минут" value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} />
       </Section>
 
-      {/* Summary */}
       <Section title="Итого">
         <div style={{ fontSize: 22, fontWeight: "bold", color: "var(--tg-theme-button-color)" }}>
           {total.toLocaleString()} UZS
@@ -139,30 +120,13 @@ function Section({ title, children }) {
 
 function RadioOption({ value, label, selected, onSelect }) {
   return (
-    <div
-      onClick={() => onSelect(value)}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "8px 0",
-        cursor: "pointer",
-      }}
-    >
-      <div
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: "50%",
-          border: `2px solid ${selected === value ? "var(--tg-theme-button-color)" : "#ccc"}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {selected === value && (
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--tg-theme-button-color)" }} />
-        )}
+    <div onClick={() => onSelect(value)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", cursor: "pointer" }}>
+      <div style={{
+        width: 20, height: 20, borderRadius: "50%",
+        border: `2px solid ${selected === value ? "var(--tg-theme-button-color)" : "#ccc"}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        {selected === value && <div style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--tg-theme-button-color)" }} />}
       </div>
       <span>{label}</span>
     </div>
@@ -170,12 +134,7 @@ function RadioOption({ value, label, selected, onSelect }) {
 }
 
 const inputStyle = {
-  width: "100%",
-  padding: "10px 0",
-  border: "none",
-  background: "transparent",
-  fontSize: 15,
-  color: "var(--tg-theme-text-color)",
-  outline: "none",
-  boxSizing: "border-box",
+  width: "100%", padding: "10px 0", border: "none",
+  background: "transparent", fontSize: 15,
+  color: "var(--tg-theme-text-color)", outline: "none", boxSizing: "border-box",
 };
