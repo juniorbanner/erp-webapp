@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createApiClient } from "../api/client";
 
-export default function Checkout({ cart, initData, tg, onSuccess }) {
+export default function Checkout({ cart, tg, onSuccess }) {
   const [paymentType, setPaymentType] = useState("cash");
   const [deliveryType, setDeliveryType] = useState("pickup");
   const [address, setAddress] = useState("");
@@ -12,14 +12,17 @@ export default function Checkout({ cart, initData, tg, onSuccess }) {
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const handleSubmit = async () => {
+    // Read initData directly from window at submit time
+    const initData = window.Telegram?.WebApp?.initData || "";
+    
     if (!initData) {
       setError("Откройте магазин через Telegram бота");
       return;
     }
+
     setLoading(true);
     setError(null);
     try {
-      // Create fresh apiClient right before submitting
       const apiClient = createApiClient(initData);
       const res = await apiClient.post("/orders/", {
         items: cart.map((i) => ({ product_id: i.id, quantity: i.qty })),
@@ -87,16 +90,9 @@ export default function Checkout({ cart, initData, tg, onSuccess }) {
         onClick={handleSubmit}
         disabled={loading || (deliveryType === "delivery" && !address.trim())}
         style={{
-          width: "100%",
-          padding: 16,
-          borderRadius: 12,
-          border: "none",
-          background: "var(--tg-theme-button-color)",
-          color: "var(--tg-theme-button-text-color)",
-          fontWeight: "bold",
-          fontSize: 16,
-          cursor: "pointer",
-          opacity: loading ? 0.7 : 1,
+          width: "100%", padding: 16, borderRadius: 12, border: "none",
+          background: "var(--tg-theme-button-color)", color: "var(--tg-theme-button-text-color)",
+          fontWeight: "bold", fontSize: 16, cursor: "pointer", opacity: loading ? 0.7 : 1,
         }}
       >
         {loading ? "⏳ Оформляем..." : "✅ Подтвердить заказ"}
