@@ -12,11 +12,14 @@ export default function Checkout({ cart, tg, onSuccess }) {
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   const handleSubmit = async () => {
-    // Read initData directly from window at submit time
-    const initData = window.Telegram?.WebApp?.initData || "";
+    const tgWebApp = window.Telegram?.WebApp;
+    const initData = tgWebApp?.initData || "";
+    
+    // Show debug info
+    window.alert(`DEBUG:\ninitData length: ${initData.length}\nplatform: ${tgWebApp?.platform || "none"}\nversion: ${tgWebApp?.version || "none"}\nfirst 50 chars: ${initData.substring(0, 50)}`);
     
     if (!initData) {
-      setError("Откройте магазин через Telegram бота");
+      setError("initData пустой. Platform: " + (tgWebApp?.platform || "нет"));
       return;
     }
 
@@ -32,7 +35,7 @@ export default function Checkout({ cart, tg, onSuccess }) {
         note: note || null,
       });
       onSuccess(res.data);
-      if (tg) tg.showAlert(`✅ Заказ #${res.data.order_id} принят! Чек отправлен в бот.`);
+      if (tg) tg.showAlert(`✅ Заказ #${res.data.order_id} принят!`);
     } catch (e) {
       const msg = e.response?.data?.detail || "Ошибка при оформлении заказа";
       setError(msg);
