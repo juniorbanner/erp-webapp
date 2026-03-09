@@ -15,11 +15,28 @@ export default function Checkout({ cart, tg, onSuccess }) {
     const tgWebApp = window.Telegram?.WebApp;
     const initData = tgWebApp?.initData || "";
     const unsafeUser = tgWebApp?.initDataUnsafe?.user;
+    const userId = unsafeUser?.id;
+
+    // Full debug
+    const debugInfo = JSON.stringify({
+      initDataLen: initData.length,
+      platform: tgWebApp?.platform,
+      version: tgWebApp?.version,
+      userId: userId,
+      unsafeUser: unsafeUser,
+      initDataUnsafe: tgWebApp?.initDataUnsafe,
+    }, null, 2);
+    window.alert("DEBUG:\n" + debugInfo);
+
+    if (!initData && !userId) {
+      setError("Нет данных пользователя: " + debugInfo);
+      return;
+    }
 
     setLoading(true);
     setError(null);
     try {
-      const apiClient = createApiClient(initData, unsafeUser?.id);
+      const apiClient = createApiClient(initData, userId);
       const res = await apiClient.post("/orders/", {
         items: cart.map((i) => ({ product_id: i.id, quantity: i.qty })),
         payment_type: paymentType,
@@ -72,7 +89,7 @@ export default function Checkout({ cart, tg, onSuccess }) {
         </div>
       </Section>
       {error && (
-        <div style={{ color: "red", padding: 10, marginBottom: 8, background: "#fff0f0", borderRadius: 8 }}>
+        <div style={{ color: "red", padding: 10, marginBottom: 8, background: "#fff0f0", borderRadius: 8, fontSize: 12 }}>
           ❌ {error}
         </div>
       )}
