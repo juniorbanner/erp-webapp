@@ -14,19 +14,12 @@ export default function Checkout({ cart, tg, onSuccess }) {
   const handleSubmit = async () => {
     const tgWebApp = window.Telegram?.WebApp;
     const initData = tgWebApp?.initData || "";
-    
-    // Show debug info
-    window.alert(`DEBUG:\ninitData length: ${initData.length}\nplatform: ${tgWebApp?.platform || "none"}\nversion: ${tgWebApp?.version || "none"}\nfirst 50 chars: ${initData.substring(0, 50)}`);
-    
-    if (!initData) {
-      setError("initData пустой. Platform: " + (tgWebApp?.platform || "нет"));
-      return;
-    }
+    const unsafeUser = tgWebApp?.initDataUnsafe?.user;
 
     setLoading(true);
     setError(null);
     try {
-      const apiClient = createApiClient(initData);
+      const apiClient = createApiClient(initData, unsafeUser?.id);
       const res = await apiClient.post("/orders/", {
         items: cart.map((i) => ({ product_id: i.id, quantity: i.qty })),
         payment_type: paymentType,
@@ -47,7 +40,6 @@ export default function Checkout({ cart, tg, onSuccess }) {
   return (
     <div style={{ padding: 16, paddingBottom: 90 }}>
       <h3 style={{ marginTop: 0 }}>🛒 Оформление заказа</h3>
-
       <Section title="Оплата">
         {[
           { value: "cash", label: "💵 Наличные" },
@@ -57,7 +49,6 @@ export default function Checkout({ cart, tg, onSuccess }) {
           <RadioOption key={opt.value} value={opt.value} label={opt.label} selected={paymentType} onSelect={setPaymentType} />
         ))}
       </Section>
-
       <Section title="Доставка">
         {[
           { value: "pickup", label: "🏪 Самовывоз" },
@@ -69,11 +60,9 @@ export default function Checkout({ cart, tg, onSuccess }) {
           <input placeholder="Введите адрес доставки..." value={address} onChange={(e) => setAddress(e.target.value)} style={inputStyle} />
         )}
       </Section>
-
       <Section title="Комментарий (необязательно)">
         <input placeholder="Например: позвоните за 30 минут" value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} />
       </Section>
-
       <Section title="Итого">
         <div style={{ fontSize: 22, fontWeight: "bold", color: "var(--tg-theme-button-color)" }}>
           {total.toLocaleString()} UZS
@@ -82,13 +71,11 @@ export default function Checkout({ cart, tg, onSuccess }) {
           {cart.length} позиций
         </div>
       </Section>
-
       {error && (
         <div style={{ color: "red", padding: 10, marginBottom: 8, background: "#fff0f0", borderRadius: 8 }}>
           ❌ {error}
         </div>
       )}
-
       <button
         onClick={handleSubmit}
         disabled={loading || (deliveryType === "delivery" && !address.trim())}
